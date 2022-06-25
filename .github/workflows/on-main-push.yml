@@ -11,23 +11,28 @@ env:
 jobs:
   build:
     name: Build fulcrum image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       VERSION: v1.7.0
     steps:
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
       - name: Checkout project
         uses: actions/checkout@v2
 
+      # Setup environment
+      - name: Set WORKER_COUNT env
+        run: echo "WORKER_COUNT=$(nproc)" >> $GITHUB_ENV
+
+      - name: Login to docker hub
+        uses: docker/login-action@v1.6.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{secrets.DOCKERHUB_PASSWORD}}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        id: qemu
 
-      - name: Setup Docker buildx action
-        uses: docker/setup-buildx-action@v1
-        id: buildx
+      - name: Create buildx worker node
+        run: docker buildx create --use
 
       - name: Show available Docker buildx platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
@@ -36,6 +41,7 @@ jobs:
         run: |
           docker buildx build \
           --platform linux/amd64,linux/arm64 \
+          --build-arg MAKEFLAGS="-j ${WORKER_COUNT}" \
           --build-arg VERSION=$VERSION \
           --tag ${{ secrets.DOCKER_HUB_USER }}/fulcrum:$VERSION \
           --output "type=registry" .
