@@ -10,7 +10,7 @@ env:
 
 jobs:
   build:
-    name: Build electrs image
+    name: Build fulcrum image
     runs-on: ubuntu-22.04
     env:
       VERSION: v1.7.0
