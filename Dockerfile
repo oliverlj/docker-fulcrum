@@ -1,5 +1,5 @@
 ARG MAKEFLAGS="-j ${WORKER_COUNT}"
-ARG VERSION=v1.8.1
+ARG VERSION=v1.8.2
 
 FROM debian:bullseye as builder
 
